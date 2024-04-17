@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@hono/node-server": "^1.10.0",
+    "@prisma/client": "^5.12.1",
+    "axios": "^1.6.8",
+    "cheerio": "^1.0.0-rc.12",
+    "hono": "^4.2.4",
+    "jsonschema": "^1.4.1",
+    "nanoid": "^5.0.7",
+    "node-schedule": "^2.1.1",
+    "signale": "^1.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0",
+    "prisma": "^5.12.1"
+  }
+}
