@@ -1,9 +1,20 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { createRoot } from 'react-dom/client';
 import './index.css';
-import App from './App';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import React from 'react';
+import Main from './views/Main';
 
 const container = document.getElementById('root');
 const root = createRoot(container!);
 
-root.render(<App />);
+const router = createBrowserRouter([
+  { path: '/', element: <Main /> },
+  { path: '/serwisy', element: <div /> },
+  { path: '*', element: <Main /> },
+]);
+
+root.render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>,
+);
