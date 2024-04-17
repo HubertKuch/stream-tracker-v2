@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: stream-tracker
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user
+    network_mode: "host"
