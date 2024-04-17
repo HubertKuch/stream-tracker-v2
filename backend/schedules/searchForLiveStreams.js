@@ -40,4 +40,4 @@ async function task() {
 
 task().then();
 
-const job = schedule.scheduleJob("*/1 * * * *", task);
+const job = schedule.scheduleJob("*/30 * * * *", task);

@@ -3,18 +3,23 @@ import './index.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import React from 'react';
 import Main from './views/Main';
+import { Toaster } from 'react-hot-toast';
+import Streams from './views/Streams';
+import Viewers from './views/Viewers';
 
 const container = document.getElementById('root');
 const root = createRoot(container!);
 
 const router = createBrowserRouter([
   { path: '/', element: <Main /> },
-  { path: '/serwisy', element: <div /> },
+  { path: '/streamy', element: <Streams /> },
+  { path: '/ogladajacy', element: <Viewers /> },
   { path: '*', element: <Main /> },
 ]);
 
 root.render(
   <React.StrictMode>
+    <Toaster />
     <RouterProvider router={router} />
   </React.StrictMode>,
 );

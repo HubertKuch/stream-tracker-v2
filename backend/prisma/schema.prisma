@@ -16,14 +16,23 @@ model Channel {
 }
 
 model LiveStream {
-  id          String  @id @unique
+  id          String    @id @unique
   title       String
   description String
   externalId  String
   startedAt   String
   endedAt     String?
   channelId   String
-  channel     Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channel     Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  Viewers     Viewers[]
 
   @@index([channelId], map: "LiveStream_channelId_fkey")
+}
+
+model Viewers {
+  id           String     @id @unique
+  liveStream   LiveStream @relation(fields: [liveStreamId], references: [id], onDelete: Cascade)
+  liveStreamId String
+	at String 
+  viewers      Int
 }

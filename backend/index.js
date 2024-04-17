@@ -1,12 +1,31 @@
 import { serve } from "@hono/node-server";
+import { cors } from "hono/cors";
 import { Hono } from "hono";
+
 import prisma from "./db.js";
 import validateChannelInput from "./schemas/channelSchema.js";
 import channelId from "./utils/channelId.js";
 import { nanoid } from "nanoid";
 import signale from "signale";
 
+import "./schedules/getViewsAndValidate.js";
+import "./schedules/searchForLiveStreams.js";
+
+import moment from "moment";
+
 const app = new Hono();
+
+app.use(
+  "/*",
+  cors({
+    origin: "*",
+    allowHeaders: [],
+    allowMethods: ["POST", "GET", "OPTIONS", "DELETE"],
+    exposeHeaders: ["Content-Length"],
+    maxAge: 600,
+    credentials: true,
+  }),
+);
 
 app.get("/channels", async (c) => {
   const { page = 0 } = c.req.query();
@@ -63,7 +82,7 @@ app.get("/lives", async (c) => {
   if (channelId) filters.channelId = channelId;
 
   const perPage = 25;
-  const channels = await prisma.liveStream.findMany({
+  const liveStreams = await prisma.liveStream.findMany({
     take: perPage,
     skip: page * perPage,
     where: filters,
@@ -74,8 +93,30 @@ app.get("/lives", async (c) => {
     page: parseInt(page),
     totalPages: parseInt(totalItems / perPage),
     totalItems,
-    channels,
+    liveStreams,
   });
+});
+
+app.get("/lives/:id/views", async (c) => {
+  const id = c.req.param("id");
+
+  if (!id) {
+    return c.json({ message: "Id jest wymagane" }, 400);
+  }
+
+  const date = moment();
+
+  date.subtract(48, "hours");
+
+  const data = await prisma.viewers.findMany({
+    where: {
+      at: {
+        gte: date.toJSON(),
+      },
+    },
+  });
+
+  return c.json(data, 200);
 });
 
 serve(app, (info) => {
