@@ -28,17 +28,26 @@ app.use(
 );
 
 app.get("/channels", async (c) => {
-  const { page = 0 } = c.req.query();
-  const perPage = 25;
+  const { page = 0, search = "" } = c.req.query();
+  console.log(search);
+  const perPage = 50;
   const channels = await prisma.channel.findMany({
     take: perPage,
     skip: page * perPage,
+    where: {
+      OR: [
+        { id: { contains: search } },
+        { name: { contains: search } },
+        { externalId: { contains: search } },
+	{ donateLink: {contains: search } }
+      ],
+    },
   });
 
   const totalItems = await prisma.channel.count();
   return c.json({
     page: parseInt(page),
-    totalPages: parseInt(totalItems / perPage),
+    totalPages: Math.ceil(totalItems / perPage),
     totalItems,
     channels,
   });
@@ -48,13 +57,16 @@ app.post("/channels", async (c) => {
   const data = await c.req.json();
   const valid = validateChannelInput(data);
 
-  if (!valid) return c.json({ message: "Link oraz nazwa sa wymagane" }, 400);
+  if (!valid)
+    return c.json({ message: "Link, nazwa oraz serwis sa wymagane" }, 400);
 
   const externalId = await channelId(data.link);
 
   if (!externalId) {
     return c.json({ message: "Nie mozna pobrac id kanalu" }, 400);
   }
+
+  if (await prisma.channel.findFirst({where: { externalId }})) return c.json({message: "Nie mozna dodac duplikatu kanalu"}, 400)
 
   const channel = await prisma.channel.create({
     data: { ...data, externalId, id: nanoid() },
@@ -76,23 +88,26 @@ app.delete("/channels/:id", async (c) => {
 });
 
 app.get("/lives", async (c) => {
-  const { page = 0, channelId = null } = c.req.query();
+  const { page = 0, channelId = null, online = false } = c.req.query();
   const filters = {};
 
   if (channelId) filters.channelId = channelId;
+  if (online === "true") filters.endedAt = { equals: null };
 
-  const perPage = 25;
+  const perPage = 50;
   const liveStreams = await prisma.liveStream.findMany({
     take: perPage,
     skip: page * perPage,
     where: filters,
+    include: { channel: { select: { name: true } } },
   });
   const totalItems = await prisma.liveStream.count({ where: filters });
 
   return c.json({
     page: parseInt(page),
     totalPages: parseInt(totalItems / perPage),
-    totalItems,
+	filters,
+	  totalItems,
     liveStreams,
   });
 });
@@ -104,16 +119,19 @@ app.get("/lives/:id/views", async (c) => {
     return c.json({ message: "Id jest wymagane" }, 400);
   }
 
-  const date = moment();
+	const lastViews = (await prisma.viewers.findFirst({where: {liveStreamId: id}, orderBy: { at: 'desc' }}));
+  const date = lastViews ? moment(lastViews?.at) : moment();
 
-  date.subtract(48, "hours");
+  date.subtract(24, "hours");
 
   const data = await prisma.viewers.findMany({
     where: {
       at: {
         gte: date.toJSON(),
       },
+      liveStreamId: id,
     },
+    orderBy: {at: 'asc'}
   });
 
   return c.json(data, 200);

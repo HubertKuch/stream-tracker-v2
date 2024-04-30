@@ -6,6 +6,7 @@ const schema = {
   properties: {
     name: { type: "string", required: true },
     link: { type: "string", required: true },
+    donateLink: { type: "string", required: true },
   },
 };
 

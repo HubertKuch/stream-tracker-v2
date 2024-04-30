@@ -11,6 +11,7 @@ model Channel {
   id         String       @id @unique
   name       String
   link       String
+	donateLink String @default("")
   externalId String
   LiveStream LiveStream[]
 }
@@ -31,8 +32,10 @@ model LiveStream {
 
 model Viewers {
   id           String     @id @unique
-  liveStream   LiveStream @relation(fields: [liveStreamId], references: [id], onDelete: Cascade)
   liveStreamId String
-	at String 
   viewers      Int
+  at           DateTime @default(now())
+  liveStream   LiveStream @relation(fields: [liveStreamId], references: [id], onDelete: Cascade)
+
+  @@index([liveStreamId], map: "Viewers_liveStreamId_fkey")
 }

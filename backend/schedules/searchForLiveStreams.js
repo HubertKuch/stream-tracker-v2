@@ -9,7 +9,7 @@ async function task() {
   const channels = await prisma.channel.findMany();
 
   for (const channel of channels) {
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channel.externalId}&type=video&eventType=live&key=${key}`;
+   try { const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channel.externalId}&type=video&eventType=live&key=${key}`;
 
     const res = await axios.get(url);
 
@@ -35,9 +35,12 @@ async function task() {
     if (alreadyExists) continue;
 
     await prisma.liveStream.create({ data: liveStream });
+
+  }
+	  catch (e ) {signale.error("Error on searching live stream %s", e.message)}
   }
 }
 
 task().then();
 
-const job = schedule.scheduleJob("*/30 * * * *", task);
+const job = schedule.scheduleJob("*/10 * * * *", task);

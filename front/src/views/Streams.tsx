@@ -5,11 +5,24 @@ import { useStreams } from '../hooks/useStreams';
 
 function Streams() {
   let [searchParams, setSearchParams] = useSearchParams();
-  const [filters] = useState({ page: 0, channelId: searchParams.get('id') || null });
+  const [filters, setFilters] = useState({ page: 0, channelId: searchParams.get('id') || null, online: !searchParams.has('id') });
   const streams = useStreams(filters);
 
   return (
     <Template refresh={() => {}}>
+      <div className="mb-5">
+        <div className="form-control">
+          <label className="label cursor-pointer w-fit">
+            <input
+              type="checkbox"
+              className="toggle"
+              defaultChecked={true}
+              onChange={() => setFilters((prev) => ({ ...prev, online: !filters.online }))}
+            />
+            <span className="ml-5 label-text">Tylko na zywo </span>
+          </label>
+        </div>
+      </div>
       <div className="overflow-x-auto">
         <table className="table table-lg">
           <thead>
@@ -17,6 +30,7 @@ function Streams() {
               <th />
               <th>Identyfikator</th>
               <th>Tytul</th>
+              <th>Kanal</th>
               <th>Odnosnik</th>
               <th>Historia</th>
               <th>Data rozpoczecia</th>
@@ -31,6 +45,7 @@ function Streams() {
                 <td>{i + 1}</td>
                 <td>{stream.id}</td>
                 <td>{stream.title}</td>
+                <td>{stream.channel.name}</td>
                 <td>
                   <a
                     target="_blank"
@@ -41,7 +56,7 @@ function Streams() {
                   </a>
                 </td>
                 <td>
-                  <a className="link" href={`/ogladajacy?id=${stream.id}`}>
+                  <a className="link link-primary" href={`/ogladajacy?id=${stream.id}`}>
                     Historia
                   </a>
                 </td>
@@ -57,6 +72,7 @@ function Streams() {
               <th />
               <th>Identyfikator</th>
               <th>Tytul</th>
+              <th>Kanal</th>
               <th>Odnosnik</th>
               <th>Historia</th>
               <th>Data rozpoczecia</th>

@@ -1,12 +1,35 @@
+import { useEffect, useLayoutEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Template from '../App';
+import SearchInput from '../comp/SearchInput';
+import { config } from '../config';
 import { Channel, useChannels } from '../hooks/useChannels';
 
 function Main() {
-  const { channels, refresh } = useChannels({ page: 0 });
+  const [search, setSearch] = useState<string>('');
+  const [page, setPage] = useState<number>(0);
+  const { channels, refresh, totalPages} = useChannels({ page, search });
+  const [pagination, setPagination] = useState<JSX.Element[]>([]);
+
+  useEffect(() => {
+    const pages = [];
+
+console.log(totalPages)
+    for (let i = 0; i !== totalPages; i++) {
+    console.log(2);
+      pages.push(
+        <button onClick={() => setPage(i)} key={i} className={`join-item btn ${i === page ? 'btn-active' : ''}`}>
+          {i + 1}
+        </button>,
+      );
+    }
+
+    setPagination(pages);
+  }, [channels]);
 
   return (
     <Template refresh={refresh}>
+      <SearchInput setState={setSearch} />
       <div className="overflow-x-auto">
         <table className="table table-lg">
           <thead>
@@ -15,6 +38,7 @@ function Main() {
               <th>Identyfikator</th>
               <th>Nazwa</th>
               <th>Odnosnik</th>
+              <th>Serwis</th>
               <th>Historia</th>
               <th>Zewnetrzny identyfikator</th>
               <th>Usun</th>
@@ -32,7 +56,12 @@ function Main() {
                   </a>
                 </td>
                 <td>
-                  <a href={`/streamy?id=${channel.id}`} className="link">
+                  <a className="link link-primary" href={channel.donateLink} target="_blank">
+                    Serwis
+                  </a>
+                </td>
+                <td>
+                  <a href={`/streamy?id=${channel.id}`} className="link link-primary">
                     Historia
                   </a>
                 </td>
@@ -55,7 +84,7 @@ function Main() {
                           <button
                             className="btn btn-success bg-[#7fe67f]"
                             onClick={() => {
-                              fetch(`http://localhost:3000/channels/${channel.id}`, { method: 'DELETE' })
+                              fetch(`${config.API_BASE}/channels/${channel.id}`, { method: 'DELETE' })
                                 .then(() => {
                                   toast.success('Usunieto kanal');
                                   refresh();
@@ -81,6 +110,7 @@ function Main() {
               <th>Identyfikator</th>
               <th>Nazwa</th>
               <th>Odnosnik</th>
+              <th>Serwis</th>
               <th>Historia</th>
               <th>Zewnetrzny identyfikator</th>
               <th>Usun</th>
@@ -88,6 +118,9 @@ function Main() {
           </tfoot>
         </table>
       </div>
+      <footer className="flex justify-center mt-5">
+        <div className="join">{pagination}</div>
+      </footer>
     </Template>
   );
 }

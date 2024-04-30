@@ -1,4 +1,5 @@
 import toast from 'react-hot-toast';
+import { config } from '../config';
 
 export default function NavBar({ refresh }: { refresh: any }) {
   return (
@@ -32,6 +33,10 @@ export default function NavBar({ refresh }: { refresh: any }) {
                 <span className="text-blue-300">Link</span>
                 <input name="link" type="text" className="grow link" placeholder="" />
               </label>
+              <label className="input input-bordered flex items-center gap-2">
+                <span className="text-blue-300">Serwis (link)</span>
+                <input name="donateLink" type="text" className="grow link" placeholder="" />
+              </label>
             </main>
             <div className="modal-action">
               <form method="dialog" className="flex gap-5">
@@ -41,10 +46,11 @@ export default function NavBar({ refresh }: { refresh: any }) {
                   onClick={async () => {
                     const name = document.querySelector('[name=name]')?.value;
                     const link = document.querySelector('[name=link]')?.value;
+                    const donateLink = document.querySelector('[name=donateLink]')?.value;
 
-                    const res = await fetch('http://localhost:3000/channels', {
+                    const res = await fetch(config.API_BASE + '/channels', {
                       method: 'POST',
-                      body: JSON.stringify({ name, link }),
+                      body: JSON.stringify({ name, link, donateLink }),
                       headers: { 'Content-Type': 'application/json' },
                     });
 

@@ -12,7 +12,8 @@ async function task() {
     const url = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${liveStream.externalId}&key=${key}`;
     const res = await axios.get(url);
 
-    if (res.data.items[0].liveStreamingDetails.actualEndTime) {
+	  console.log(res.data.items.length)
+    if (res.data.items.length > 0 && res.data.items[0]?.liveStreamingDetails?.actualEndTime) {
       await prisma.liveStream.update({
         where: { id: liveStream.id },
         data: { endedAt: res.data.items[0].liveStreamingDetails.actualEndTime },
@@ -27,8 +28,23 @@ async function task() {
     }
 
     const concurrentViewers = parseInt(
-      res.data.items[0].liveStreamingDetails.concurrentViewers,
+      res.data.items[0]?.liveStreamingDetails?.concurrentViewers || -1,
     );
+
+    if (isNaN(concurrentViewers) || concurrentViewers === -1) {
+      await prisma.liveStream.update({
+        where: { id: liveStream.id },
+        data: { endedAt: new Date().toJSON() },
+      });
+
+      signale.info(
+        "Live stream %s ended at %s",
+        liveStream.title,
+        res.data.items[0]?.liveStreamingDetails?.actualEndTime || new Date().toJSON(),
+      );
+
+      continue;
+    }
 
     signale.info(
       "Live stream %s has %d viewers",
