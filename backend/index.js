@@ -12,6 +12,7 @@ import "./schedules/getViewsAndValidate.js";
 import "./schedules/searchForLiveStreams.js";
 
 import moment from "moment";
+import { Platform } from "@prisma/client";
 
 const app = new Hono();
 
@@ -39,7 +40,7 @@ app.get("/channels", async (c) => {
         { id: { contains: search } },
         { name: { contains: search } },
         { externalId: { contains: search } },
-	{ donateLink: {contains: search } }
+        { donateLink: { contains: search } },
       ],
     },
   });
@@ -60,14 +61,17 @@ app.post("/channels", async (c) => {
   if (!valid)
     return c.json({ message: "Link, nazwa oraz serwis sa wymagane" }, 400);
 
-  const externalId = await channelId(data.link);
+  const externalId = await channelId(data.platform, data.link);
 
   if (!externalId) {
     return c.json({ message: "Nie mozna pobrac id kanalu" }, 400);
   }
 
-  if (await prisma.channel.findFirst({where: { externalId }})) return c.json({message: "Nie mozna dodac duplikatu kanalu"}, 400)
+  if (await prisma.channel.findFirst({ where: { externalId } }))
+    return c.json({ message: "Nie mozna dodac duplikatu kanalu" }, 400);
 
+  data.platform =
+    data.platform === "YouTube" ? Platform.YOUTUBE : Platform.TWITCH;
   const channel = await prisma.channel.create({
     data: { ...data, externalId, id: nanoid() },
   });
@@ -106,8 +110,8 @@ app.get("/lives", async (c) => {
   return c.json({
     page: parseInt(page),
     totalPages: parseInt(totalItems / perPage),
-	filters,
-	  totalItems,
+    filters,
+    totalItems,
     liveStreams,
   });
 });
@@ -119,7 +123,10 @@ app.get("/lives/:id/views", async (c) => {
     return c.json({ message: "Id jest wymagane" }, 400);
   }
 
-	const lastViews = (await prisma.viewers.findFirst({where: {liveStreamId: id}, orderBy: { at: 'desc' }}));
+  const lastViews = await prisma.viewers.findFirst({
+    where: { liveStreamId: id },
+    orderBy: { at: "desc" },
+  });
   const date = lastViews ? moment(lastViews?.at) : moment();
 
   date.subtract(24, "hours");
@@ -131,7 +138,7 @@ app.get("/lives/:id/views", async (c) => {
       },
       liveStreamId: id,
     },
-    orderBy: {at: 'asc'}
+    orderBy: { at: "asc" },
   });
 
   return c.json(data, 200);

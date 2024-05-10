@@ -8,15 +8,13 @@ import { Channel, useChannels } from '../hooks/useChannels';
 function Main() {
   const [search, setSearch] = useState<string>('');
   const [page, setPage] = useState<number>(0);
-  const { channels, refresh, totalPages} = useChannels({ page, search });
+  const { channels, refresh, totalPages } = useChannels({ page, search });
   const [pagination, setPagination] = useState<JSX.Element[]>([]);
 
   useEffect(() => {
     const pages = [];
 
-console.log(totalPages)
     for (let i = 0; i !== totalPages; i++) {
-    console.log(2);
       pages.push(
         <button onClick={() => setPage(i)} key={i} className={`join-item btn ${i === page ? 'btn-active' : ''}`}>
           {i + 1}
@@ -37,6 +35,7 @@ console.log(totalPages)
               <th />
               <th>Identyfikator</th>
               <th>Nazwa</th>
+              <th>Platforma</th>
               <th>Odnosnik</th>
               <th>Serwis</th>
               <th>Historia</th>
@@ -50,6 +49,7 @@ console.log(totalPages)
                 <td>{i + 1}</td>
                 <td>{channel.id}</td>
                 <td>{channel.name}</td>
+                <td>{channel.platform}</td>
                 <td>
                   <a className="link link-primary" href={channel.link} target="_blank">
                     {channel.link}
@@ -109,6 +109,7 @@ console.log(totalPages)
               <th />
               <th>Identyfikator</th>
               <th>Nazwa</th>
+              <th>Platforma</th>
               <th>Odnosnik</th>
               <th>Serwis</th>
               <th>Historia</th>

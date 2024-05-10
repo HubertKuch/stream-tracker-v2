@@ -37,6 +37,13 @@ export default function NavBar({ refresh }: { refresh: any }) {
                 <span className="text-blue-300">Serwis (link)</span>
                 <input name="donateLink" type="text" className="grow link" placeholder="" />
               </label>
+              <label className="input input-bordered flex items-center gap-2">
+                <span className="text-blue-300">Platforma</span>
+                <select name="platform" className="select select-ghost w-full ">
+                  <option>YouTube</option>
+                  <option>Twitch</option>
+                </select>
+              </label>
             </main>
             <div className="modal-action">
               <form method="dialog" className="flex gap-5">
@@ -47,10 +54,11 @@ export default function NavBar({ refresh }: { refresh: any }) {
                     const name = document.querySelector('[name=name]')?.value;
                     const link = document.querySelector('[name=link]')?.value;
                     const donateLink = document.querySelector('[name=donateLink]')?.value;
+                    const platform = document.querySelector('[name=platform]')?.value;
 
                     const res = await fetch(config.API_BASE + '/channels', {
                       method: 'POST',
-                      body: JSON.stringify({ name, link, donateLink }),
+                      body: JSON.stringify({ name, link, donateLink, platform }),
                       headers: { 'Content-Type': 'application/json' },
                     });
 

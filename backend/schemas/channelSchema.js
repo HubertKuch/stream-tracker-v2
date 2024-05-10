@@ -7,6 +7,7 @@ const schema = {
     name: { type: "string", required: true },
     link: { type: "string", required: true },
     donateLink: { type: "string", required: true },
+    platform: { type: "string", enum: ["YouTube", "Twitch"], required: true },
   },
 };
 

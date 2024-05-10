@@ -11,8 +11,9 @@ model Channel {
   id         String       @id @unique
   name       String
   link       String
-	donateLink String @default("")
+  donateLink String       @default("")
   externalId String
+  platform    Platform  @default(YOUTUBE)
   LiveStream LiveStream[]
 }
 
@@ -34,8 +35,13 @@ model Viewers {
   id           String     @id @unique
   liveStreamId String
   viewers      Int
-  at           DateTime @default(now())
+  at           DateTime   @default(now())
   liveStream   LiveStream @relation(fields: [liveStreamId], references: [id], onDelete: Cascade)
 
   @@index([liveStreamId], map: "Viewers_liveStreamId_fkey")
+}
+
+enum Platform {
+  YOUTUBE
+  TWITCH
 }

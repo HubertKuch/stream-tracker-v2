@@ -3,17 +3,58 @@ import prisma from "../db.js";
 import axios from "axios";
 import signale from "signale";
 import { nanoid } from "nanoid";
+import { Platform } from "@prisma/client";
+import TwitchWrapper from "../utils/TwitchWrapper.js";
 
-async function task() {
-  const key = process.env.API_KEY;
-  const liveStreams = await prisma.liveStream.findMany();
+async function twitchTask() {
+  const wrapper = new TwitchWrapper(
+    process.env.TW_API_ID,
+    process.env.TW_API_SECRET,
+  );
+
+  const liveStreams = await prisma.liveStream.findMany({
+    where: { channel: { platform: Platform.TWITCH } },
+    select: {
+      channel: { select: { externalId: true } },
+      id: true,
+      title: true,
+    },
+  });
+
+  for (const liveStream of liveStreams) {
+    const res = await wrapper.getUser(liveStream.channel.externalId);
+
+    const watchers = res.length !== 0 ? res[0].viewer_count : null;
+
+    if (watchers === null) {
+      await prisma.liveStream.update({
+        where: { id: liveStream.id },
+        data: { endedAt: new Date() },
+      });
+      continue;
+    }
+
+    signale.info("Live stream %s has %d viewers", liveStream.title, watchers);
+    await prisma.viewers.create({
+      data: { id: nanoid(), viewers: watchers, liveStreamId: liveStream.id },
+    });
+  }
+}
+
+async function ytTask() {
+  const key = process.env.YT_API_KEY;
+  const liveStreams = await prisma.liveStream.findMany({
+    where: { channel: { platform: Platform.YOUTUBE } },
+  });
 
   for (const liveStream of liveStreams) {
     const url = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${liveStream.externalId}&key=${key}`;
     const res = await axios.get(url);
 
-	  console.log(res.data.items.length)
-    if (res.data.items.length > 0 && res.data.items[0]?.liveStreamingDetails?.actualEndTime) {
+    if (
+      res.data.items.length > 0 &&
+      res.data.items[0]?.liveStreamingDetails?.actualEndTime
+    ) {
       await prisma.liveStream.update({
         where: { id: liveStream.id },
         data: { endedAt: res.data.items[0].liveStreamingDetails.actualEndTime },
@@ -34,13 +75,13 @@ async function task() {
     if (isNaN(concurrentViewers) || concurrentViewers === -1) {
       await prisma.liveStream.update({
         where: { id: liveStream.id },
-        data: { endedAt: new Date().toJSON() },
+        data: { endedAt: new Date() },
       });
 
       signale.info(
         "Live stream %s ended at %s",
         liveStream.title,
-        res.data.items[0]?.liveStreamingDetails?.actualEndTime || new Date().toJSON(),
+        res.data.items[0]?.liveStreamingDetails?.actualEndTime || new Date(),
       );
 
       continue;
@@ -63,6 +104,8 @@ async function task() {
   }
 }
 
-task().then();
+ytTask().then();
+twitchTask().then;
 
-const job = schedule.scheduleJob("*/5 * * * *", task);
+schedule.scheduleJob("*/5 * * * *", ytTask);
+schedule.scheduleJob("*/5 * * * *", twitchTask);

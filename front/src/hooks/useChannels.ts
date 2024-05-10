@@ -5,6 +5,7 @@ import { config } from '../config';
 export type Channel = {
   id: string;
   name: string;
+  platform: string;
   externalId: string;
   donateLink: string;
   link: string;
@@ -22,8 +23,8 @@ export function useChannels({ page, search }: { page: number; search: string }) 
   useEffect(() => {
     fetch(`${config.API_BASE}/channels?page=${page || 0}&search=${search}`)
       .then((res) => res.json())
-      .then((res) => setChannels(res))
-      window.scrollTo(0, 0)
+      .then((res) => setChannels(res));
+    window.scrollTo(0, 0);
   }, [page, refresh, search]);
 
   return { ...channels, refresh: () => setRefresh(Math.random()) };

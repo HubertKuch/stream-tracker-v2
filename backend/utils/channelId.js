@@ -1,3 +1,4 @@
+import { Platform } from "@prisma/client";
 import axios from "axios";
 import * as cheerio from "cheerio";
 import signale from "signale";
@@ -13,18 +14,22 @@ const axiosInstance = axios.create({
   },
 });
 
-const channelId = async (url) => {
-  try {
-    const ytChannelPageResponse = await axiosInstance.get(url);
+const channelId = async (platform, url) => {
+  if (platform === Platform.YOUTUBE) {
+    try {
+      const ytChannelPageResponse = await axiosInstance.get(url);
 
-    const $ = cheerio.load(ytChannelPageResponse.data);
+      const $ = cheerio.load(ytChannelPageResponse.data);
 
-    return $('link[rel="canonical"]')
-      .attr("href")
-      .replace("https://www.youtube.com/channel/", "");
-  } catch (e) {
-    signale.error("Error for getting youtube channel id %s", e.message);
-    return null;
+      return $('link[rel="canonical"]')
+        .attr("href")
+        .replace("https://www.youtube.com/channel/", "");
+    } catch (e) {
+      signale.error("Error for getting youtube channel id %s", e.message);
+      return null;
+    }
+  } else {
+    return encodeURI(url).split("/").reverse()[0];
   }
 };
 
