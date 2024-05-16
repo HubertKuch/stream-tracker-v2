@@ -5,6 +5,7 @@ import signale from "signale";
 import { nanoid } from "nanoid";
 import { Platform } from "@prisma/client";
 import TwitchWrapper from "../utils/TwitchWrapper.js";
+import runner from "./runner.js";
 
 async function twitchTask() {
   const channels = await prisma.channel.findMany({
@@ -43,6 +44,7 @@ async function twitchTask() {
 }
 
 async function youtubeTask() {
+  throw new Error("ds");
   const key = process.env.YT_API_KEY;
   const channels = await prisma.channel.findMany({
     where: { platform: Platform.YOUTUBE },
@@ -82,8 +84,5 @@ async function youtubeTask() {
   }
 }
 
-youtubeTask().then();
-twitchTask().then();
-
-schedule.scheduleJob("*/10 * * * *", youtubeTask);
-schedule.scheduleJob("*/10 * * * *", twitchTask);
+runner("YouTube - szukanie", "*/10  * * * *", youtubeTask).then();
+runner("Twitch - szukanie", "*/10  * * * *", twitchTask).then();

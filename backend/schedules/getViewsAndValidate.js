@@ -5,6 +5,7 @@ import signale from "signale";
 import { nanoid } from "nanoid";
 import { Platform } from "@prisma/client";
 import TwitchWrapper from "../utils/TwitchWrapper.js";
+import runner from "./runner.js";
 
 async function twitchTask() {
   const wrapper = new TwitchWrapper(
@@ -29,7 +30,7 @@ async function twitchTask() {
     if (watchers === null) {
       await prisma.liveStream.update({
         where: { id: liveStream.id },
-        data: { endedAt: new Date() },
+        data: { endedAt: new Date().toJSON() },
       });
       continue;
     }
@@ -48,64 +49,67 @@ async function ytTask() {
   });
 
   for (const liveStream of liveStreams) {
-    const url = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${liveStream.externalId}&key=${key}`;
-    const res = await axios.get(url);
+    try {
+      const url = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${liveStream.externalId}&key=${key}`;
+      const res = await axios.get(url);
 
-    if (
-      res.data.items.length > 0 &&
-      res.data.items[0]?.liveStreamingDetails?.actualEndTime
-    ) {
-      await prisma.liveStream.update({
-        where: { id: liveStream.id },
-        data: { endedAt: res.data.items[0].liveStreamingDetails.actualEndTime },
-      });
+      if (
+        res.data.items.length > 0 &&
+        res.data.items[0]?.liveStreamingDetails?.actualEndTime
+      ) {
+        await prisma.liveStream.update({
+          where: { id: liveStream.id },
+          data: {
+            endedAt: res.data.items[0].liveStreamingDetails.actualEndTime,
+          },
+        });
 
-      signale.info(
-        "Live stream %s ended at %s",
-        liveStream.title,
-        res.data.items[0].liveStreamingDetails.actualEndTime,
-      );
-      continue;
-    }
+        signale.info(
+          "Live stream %s ended at %s",
+          liveStream.title,
+          res.data.items[0].liveStreamingDetails.actualEndTime,
+        );
+        continue;
+      }
 
-    const concurrentViewers = parseInt(
-      res.data.items[0]?.liveStreamingDetails?.concurrentViewers || -1,
-    );
-
-    if (isNaN(concurrentViewers) || concurrentViewers === -1) {
-      await prisma.liveStream.update({
-        where: { id: liveStream.id },
-        data: { endedAt: new Date() },
-      });
-
-      signale.info(
-        "Live stream %s ended at %s",
-        liveStream.title,
-        res.data.items[0]?.liveStreamingDetails?.actualEndTime || new Date(),
+      const concurrentViewers = parseInt(
+        res.data.items[0]?.liveStreamingDetails?.concurrentViewers || -1,
       );
 
-      continue;
+      if (isNaN(concurrentViewers) || concurrentViewers === -1) {
+        await prisma.liveStream.update({
+          where: { id: liveStream.id },
+          data: { endedAt: new Date().toJSON() },
+        });
+
+        signale.info(
+          "Live stream %s ended at %s",
+          liveStream.title,
+          res.data.items[0]?.liveStreamingDetails?.actualEndTime || new Date(),
+        );
+
+        continue;
+      }
+
+      signale.info(
+        "Live stream %s has %d viewers",
+        liveStream.title,
+        concurrentViewers,
+      );
+
+      await prisma.viewers.create({
+        data: {
+          id: nanoid(),
+          at: new Date().toJSON(),
+          viewers: concurrentViewers,
+          liveStreamId: liveStream.id,
+        },
+      });
+    } catch (e) {
+      console.error("YouTube videos error ", e);
     }
-
-    signale.info(
-      "Live stream %s has %d viewers",
-      liveStream.title,
-      concurrentViewers,
-    );
-
-    await prisma.viewers.create({
-      data: {
-        id: nanoid(),
-        at: new Date().toJSON(),
-        viewers: concurrentViewers,
-        liveStreamId: liveStream.id,
-      },
-    });
   }
 }
 
-ytTask().then();
-twitchTask().then;
-
-schedule.scheduleJob("*/5 * * * *", ytTask);
-schedule.scheduleJob("*/5 * * * *", twitchTask);
+runner("YouTube - walidacja", "*/5  * * * *", ytTask).then();
+runner("Twitch - walidacja", "*/5  * * * *", twitchTask).then();

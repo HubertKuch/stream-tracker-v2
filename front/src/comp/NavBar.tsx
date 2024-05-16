@@ -15,6 +15,9 @@ export default function NavBar({ refresh }: { refresh: any }) {
           <a className="link" href="/streamy">
             Streamy
           </a>
+          <a className="link" href="/monitor">
+            Monitor
+          </a>
         </div>
       </div>
       <div className="w-1/2 justify-end">

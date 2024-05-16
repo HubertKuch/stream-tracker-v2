@@ -1,0 +1,28 @@
+{
+  "jobs": [
+    {
+      "name": "YouTube - walidacja",
+      "errors": [],
+      "status": "ok"
+    },
+    {
+      "name": "Twitch - walidacja",
+      "errors": [],
+      "status": "ok"
+    },
+    {
+      "name": "YouTube - szukanie",
+      "errors": [
+        {
+          "message": "ds"
+        }
+      ],
+      "status": "stopped"
+    },
+    {
+      "name": "Twitch - szukanie",
+      "errors": [],
+      "status": "ok"
+    }
+  ]
+}

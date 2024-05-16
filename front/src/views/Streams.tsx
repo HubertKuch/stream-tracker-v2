@@ -50,9 +50,10 @@ function Streams() {
                   <a
                     target="_blank"
                     className="link link-primary"
-                    href={`https://www.youtube.com/watch?v=${stream.externalId}`}
+                    href={ stream.channel.platform === "YOUTUBE" ? `https://www.youtube.com/watch?v=${stream.externalId}` : stream.channel.link }
                   >
-                    https://www.youtube.com/watch?v={stream.externalId}
+
+		  Odnosnik
                   </a>
                 </td>
                 <td>
@@ -60,8 +61,8 @@ function Streams() {
                     Historia
                   </a>
                 </td>
-                <td>{stream.startedAt}</td>
-                <td>{stream.endedAt || '-'}</td>
+                <td>{stream.startedAt.replace("T", " ").replace("Z", " ")}</td>
+                <td>{stream.endedAt?.replace("T", " ").replace("Z", " ") || '-'}</td>
                 <td>{stream.endedAt ? 'Nie' : 'Tak'}</td>
                 <td>{stream.externalId}</td>
               </tr>

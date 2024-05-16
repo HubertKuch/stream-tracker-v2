@@ -13,6 +13,7 @@ import "./schedules/searchForLiveStreams.js";
 
 import moment from "moment";
 import { Platform } from "@prisma/client";
+import db from "./statusmonitor/db.js";
 
 const app = new Hono();
 
@@ -30,7 +31,7 @@ app.use(
 
 app.get("/channels", async (c) => {
   const { page = 0, search = "" } = c.req.query();
-  console.log(search);
+
   const perPage = 50;
   const channels = await prisma.channel.findMany({
     take: perPage,
@@ -41,6 +42,7 @@ app.get("/channels", async (c) => {
         { name: { contains: search } },
         { externalId: { contains: search } },
         { donateLink: { contains: search } },
+        { link: { contains: search } },
       ],
     },
   });
@@ -72,6 +74,19 @@ app.post("/channels", async (c) => {
 
   data.platform =
     data.platform === "YouTube" ? Platform.YOUTUBE : Platform.TWITCH;
+
+  if (
+    data.platform === Platform.TWITCH &&
+    !data.link.startsWith("https://www.twitch.tv/")
+  ) {
+    return c.json({ message: "Niepoprawny link!" }, 400);
+  } else if (
+    data.platform === Platform.YOUTUBE &&
+    !data.link.startsWith("https://www.youtube.com/")
+  ) {
+    return c.json({ message: "Niepoprawny link!" }, 400);
+  }
+
   const channel = await prisma.channel.create({
     data: { ...data, externalId, id: nanoid() },
   });
@@ -103,7 +118,12 @@ app.get("/lives", async (c) => {
     take: perPage,
     skip: page * perPage,
     where: filters,
-    include: { channel: { select: { name: true } } },
+    orderBy: {
+      startedAt: "desc",
+    },
+    include: {
+      channel: { select: { name: true, platform: true, link: true } },
+    },
   });
   const totalItems = await prisma.liveStream.count({ where: filters });
 
@@ -142,6 +162,10 @@ app.get("/lives/:id/views", async (c) => {
   });
 
   return c.json(data, 200);
+});
+
+app.get("/monitor", async (c) => {
+  return c.json(db.data, 200);
 });
 
 serve(app, (info) => {

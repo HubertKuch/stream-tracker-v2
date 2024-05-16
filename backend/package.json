@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js --ignore db.json"
   },
   "type": "module",
   "keywords": [],
@@ -17,6 +17,7 @@
     "cheerio": "^1.0.0-rc.12",
     "hono": "^4.2.4",
     "jsonschema": "^1.4.1",
+    "lowdb": "^7.0.1",
     "moment": "^2.30.1",
     "nanoid": "^5.0.7",
     "node-schedule": "^2.1.1",
