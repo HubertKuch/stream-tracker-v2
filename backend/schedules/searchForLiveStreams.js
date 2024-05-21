@@ -1,4 +1,3 @@
-import schedule from "node-schedule";
 import prisma from "../db.js";
 import axios from "axios";
 import signale from "signale";
@@ -7,7 +6,7 @@ import { Platform } from "@prisma/client";
 import TwitchWrapper from "../utils/TwitchWrapper.js";
 import runner from "./runner.js";
 
-async function twitchTask() {
+export async function twitchSearchTask() {
   const channels = await prisma.channel.findMany({
     where: { platform: Platform.TWITCH },
   });
@@ -43,8 +42,7 @@ async function twitchTask() {
   }
 }
 
-async function youtubeTask() {
-  throw new Error("ds");
+export async function youtubeSearchTask() {
   const key = process.env.YT_API_KEY;
   const channels = await prisma.channel.findMany({
     where: { platform: Platform.YOUTUBE },
@@ -83,6 +81,3 @@ async function youtubeTask() {
     }
   }
 }
-
-runner("YouTube - szukanie", "*/10  * * * *", youtubeTask).then();
-runner("Twitch - szukanie", "*/10  * * * *", twitchTask).then();

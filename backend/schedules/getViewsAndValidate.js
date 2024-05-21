@@ -7,7 +7,7 @@ import { Platform } from "@prisma/client";
 import TwitchWrapper from "../utils/TwitchWrapper.js";
 import runner from "./runner.js";
 
-async function twitchTask() {
+export async function twitchValidateTask() {
   const wrapper = new TwitchWrapper(
     process.env.TW_API_ID,
     process.env.TW_API_SECRET,
@@ -42,7 +42,7 @@ async function twitchTask() {
   }
 }
 
-async function ytTask() {
+export async function ytValidateTask() {
   const key = process.env.YT_API_KEY;
   const liveStreams = await prisma.liveStream.findMany({
     where: { channel: { platform: Platform.YOUTUBE } },
@@ -110,6 +110,3 @@ async function ytTask() {
     }
   }
 }
-
-runner("YouTube - walidacja", "*/5  * * * *", ytTask).then();
-runner("Twitch - walidacja", "*/5  * * * *", twitchTask).then();

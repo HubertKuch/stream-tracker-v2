@@ -12,12 +12,8 @@
     },
     {
       "name": "YouTube - szukanie",
-      "errors": [
-        {
-          "message": "ds"
-        }
-      ],
-      "status": "stopped"
+      "errors": [],
+      "status": "ok"
     },
     {
       "name": "Twitch - szukanie",

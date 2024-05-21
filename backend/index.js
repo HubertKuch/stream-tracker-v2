@@ -8,26 +8,33 @@ import channelId from "./utils/channelId.js";
 import { nanoid } from "nanoid";
 import signale from "signale";
 
-import "./schedules/getViewsAndValidate.js";
-import "./schedules/searchForLiveStreams.js";
-
 import moment from "moment";
 import { Platform } from "@prisma/client";
 import db from "./statusmonitor/db.js";
+import runner from "./schedules/runner.js";
+import {
+  twitchValidateTask,
+  ytValidateTask,
+} from "./schedules/getViewsAndValidate.js";
+import {
+  twitchSearchTask,
+  youtubeSearchTask,
+} from "./schedules/searchForLiveStreams.js";
 
 const app = new Hono();
+const monitorApp = new Hono();
 
-app.use(
-  "/*",
-  cors({
-    origin: "*",
-    allowHeaders: [],
-    allowMethods: ["POST", "GET", "OPTIONS", "DELETE"],
-    exposeHeaders: ["Content-Length"],
-    maxAge: 600,
-    credentials: true,
-  }),
-);
+const corsOpt = cors({
+  origin: "*",
+  allowHeaders: [],
+  allowMethods: ["POST", "GET", "OPTIONS", "DELETE"],
+  exposeHeaders: ["Content-Length"],
+  maxAge: 600,
+  credentials: true,
+});
+
+monitorApp.use("/*", corsOpt);
+app.use("/*", corsOpt);
 
 app.get("/channels", async (c) => {
   const { page = 0, search = "" } = c.req.query();
@@ -164,10 +171,26 @@ app.get("/lives/:id/views", async (c) => {
   return c.json(data, 200);
 });
 
-app.get("/monitor", async (c) => {
+monitorApp.get("/monitor", async (c) => {
   return c.json(db.data, 200);
 });
 
-serve(app, (info) => {
-  console.log(`Listening on http://localhost:${info.port}`);
-});
+try {
+  serve({ fetch: monitorApp.fetch, port: 3001 }, (info) => {
+    console.log(`Monitor app listening on http://localhost:${info.port}`);
+  });
+} catch (e) {}
+
+try {
+  runner("YouTube - walidacja", "*/5  * * * *", ytValidateTask).then();
+  runner("Twitch - walidacja", "*/5  * * * *", twitchValidateTask).then();
+
+  runner("YouTube - szukanie", "*/10  * * * *", youtubeSearchTask).then();
+  runner("Twitch - szukanie", "*/10  * * * *", twitchSearchTask).then();
+} catch (e) {}
+
+try {
+  serve(app, (info) => {
+    console.log(`Default app listening on http://localhost:${info.port}`);
+  });
+} catch (e) {}
